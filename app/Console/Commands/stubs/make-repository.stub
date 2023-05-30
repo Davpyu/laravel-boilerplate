@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Interfaces\Repositories\DummyInterface;
+use App\Models\DummyModel;
+use Illuminate\Database\Eloquent\Collection;
+
+class DummyRepository extends Repository implements DummyInterface
+{
+    private DummyModel $model;
+
+    public function __construct()
+    {
+        $this->model = DummyModel::class;
+    }
+
+    public function all() : Collection
+    {
+        return $this->model::all();
+    }
+
+    public function create(array $request) : DummyModel
+    {
+        return $this->model::query()->create($request);
+    }
+
+    public function find(int $id) : DummyModel
+    {
+        return $this->model::query()->find($id);
+    }
+
+    public function update(array $request, int $id) : void
+    {
+        $example = $this->find($id);
+        $example->update($request);
+    }
+
+    public function destroy(int $id) : void
+    {
+        $example = $this->find($id);
+        $example->delete($id);
+    }
+}

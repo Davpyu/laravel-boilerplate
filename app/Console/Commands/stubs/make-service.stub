@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\DummyModel;
+use App\Http\Requests\DummyRequest;
+use App\Interfaces\Repositories\DummyRepository;
+use App\Interfaces\Services\DummyInterface;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\Collection;
+
+class DummyService extends Service implements DummyInterface
+{
+    public function __construct(private DummyRepository $repository)
+    {}
+
+    public function all() : JsonResponse
+    {
+        $data = $this->cacheAll();
+        return $this->responseWithData($data);
+    }
+
+    public function store(DummyRequest $request) : JsonResponse
+    {
+        $create = $request->all();
+        $this->repository->create($create);
+        $this->respond($this->getCacheKey(self::CACHE, 'all'))->cacheAll();
+        return $this->responseResourceCreated('Example Created');
+    }
+
+    public function show(int $id) : JsonResponse
+    {
+        $data = $this->cacheShow($id);
+        return $this->responseWithData($data);
+    }
+
+    public function update(DummyRequest $request, int $id) : JsonResponse
+    {
+        $update = $request->all();
+        $this->repository->update($update, $id);
+        $this->respond([
+            $this->getCacheKey(self::CACHE, 'all'),
+            $this->getCacheKey(self::CACHE, "show.{$id}")
+        ])->cacheAll();
+        $this->cacheShow($id);
+        return $this->responseSuccess('Example Updated');
+    }
+
+    public function destroy(int $id) : JsonResponse
+    {
+        $this->respond([
+            $this->getCacheKey(self::CACHE, 'all'),
+            $this->getCacheKey(self::CACHE, "show.{$id}")
+        ]);
+        $this->repository->delete($id);
+        $this->cacheAll();
+        return $this->responseSuccess('Example deleted');
+    }
+
+    private function cacheAll() : Collection
+    {
+        return Cache::remember($this->getCacheKey(self::CACHE, 'all'), $this->getTTL(15), function () {
+            return $this->repository->all();
+        });
+    }
+
+    private function cacheShow(int $id) : DummyModel
+    {
+        return Cache::remember(
+            $this->getCacheKey(self::CACHE, "show.{$id}"),
+            $this->getTTL(15),
+            function () use ($id) {
+                return $this->repository->find($id);
+            }
+        );
+    }
+}

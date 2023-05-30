@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Interfaces\Services;
+
+use App\Http\Requests\DummyRequest;
+use App\Models\DummyModel;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\Collection;
+
+interface DummyInterface
+{
+    public function all() : JsonResponse;
+    public function store(DummyRequest $request) : JsonResponse;
+    public function show(int $id) : JsonResponse;
+    public function update(DummyRequest $request, int $id) : JsonResponse;
+    public function destroy(int $id) : JsonResponse;
+    private function cacheAll() : Collection;
+    private function cacheShow(int $id) : DummyModel;
+}
